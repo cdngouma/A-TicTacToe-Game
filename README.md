@@ -10,4 +10,4 @@ Demo link: https://codepen.io/cdngouma/pen/ejgZzJ<br/>
 
 Original project idea link: https://www.freecodecamp.com/challenges/build-a-tic-tac-toe-game
 ## Screenshot
-![Game screenshot](/res/screenshots/sc0.png)
+<img src="TicTacToe-Js/res/screenshots/sc0.PNG" width="600"/>
