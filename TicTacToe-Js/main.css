@@ -69,6 +69,10 @@
 	margin: auto;
 }
 
+#p2-cp-stats:hover{
+	cursor: pointer;
+}
+
 #title-bar{
 	margin: 35px auto;
 }
