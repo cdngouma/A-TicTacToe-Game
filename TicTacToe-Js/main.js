@@ -3,136 +3,122 @@
 /*	2018
 **/
 
-// TODO: replace alert messages by better
-var ROW_SIZE = 3,
-	board = [],
-	turn = '',
-	round = 0;
-	score = {
-		'player1':0,
+const ROW_SIZE = 3;
+var board = [];
+var turn = '';
+var round = 0;
+var score = {
+		'X':0,
 		'tie':0,
-		'player2':0
+		'O':0
 	};
-	moves = 0;
-	map = '';			// string representation of board
-	gameMode = 1;		// 0: P vs P 	1: P vs CP
+var moves = 0;
+var map = '';			// string representation of board
+var gameMode = 0;		// 0: P vs P 	1: P vs CP
+
+var player1 = 'X';
+var player2 = 'O';
+
+var playing = false;
 
 function init(){
-	for(let r=0; r<ROW_SIZE; r++){
+	for(let r=0; r < ROW_SIZE; r++){
 		var row = document.createElement('div');
 		$(row).addClass('row');
 		$('#board').append(row);
 
-		for(let c=0; c<ROW_SIZE; c++){
+		for(let c=0; c < ROW_SIZE; c++){
 			var cell = document.createElement('div');
 			$(cell).addClass('cell');
 			$(cell).addClass('col-4-md');
 			$(cell).addClass('col-4-sm');
 			$(cell).addClass('col-4-xs');
-			$(cell).attr('id', 'cell-'+(r*3 +c + 1));
+			$(cell).attr('id', 'cell-' + (r*3 + c + 1));
 			$(row).append(cell);
 			board.push(cell);
 		}
 	}
+
+	// initialize game with mode P vs CP
+	gameMode = 1;
+	$('#_pvscp-btn').css('opacity', '1');
+
 	updateScores();
 	newGame();
 }
 
+function resetStats(){
+	score['X'] = 0;
+	score['O'] = 0;
+	score['tie'] = 0;
+	round = 0;
+	turn = '';
+	updateScores();
+}
+
 function updateScores(){
-	document.getElementById('score-p1').innerHTML = score['player1'];
+	document.getElementById('score-p1').innerHTML = score['X'];
 	document.getElementById('score-ties').innerHTML = score['tie'];
-	document.getElementById('score-p2').innerHTML = score['player2'];
+	document.getElementById('score-p2').innerHTML = score['O'];
+}
+
+function updateNotif(str){
+	document.getElementById('notif-bar').innerHTML = str;
 }
 
 function clearBoard(){
 	for(let i=0; i<ROW_SIZE*ROW_SIZE; i++){
 		$(board[i]).empty();
-		$(board[i]).removeClass('used');
-		$(board[i]).removeClass('_round-tile _cross-tile');
-		$(board[i]).removeAttr('tile');
+		$(board[i]).removeClass('O-tile X-tile used');
 	}
 	newGame();
 }
 
 function newGame(){
-	map = '         ';		// 9 spaces
+	map = '         ';		// 9 spaces for 9 cells
 	moves = 0;
 	round++;
-	turn = round % 2 == 0 ? 'x' : 'o';
+
+	$('#'+player1+'-stats').addClass('selected');
+
+	turn = round % 2 == 0 ? 'O' : 'X';
+	updateNotif(turn + "  turn");
+
+	playing = true;
+
 	// CP start
-	if(gameMode == 1 && round%2==0){
+	if(gameMode === 1 && turn === player2){
 		setTimeout(function() {aiMoves();}, 400);
 	}
 }
 
 function aiMoves(){
-	if(turn === 'x'){
+	if(turn === player2){
 		// AI tries to win
 		let loc = 0;
-		loc = getAILocation('cross');
+		loc = getAILocation(player2);
 		// AI prevent player to win
 		if(loc === 0)
-			loc = getAILocation('round');
+			loc = getAILocation(player1);
 		// AI make random move
 		while(loc === 0){
 			loc = Math.floor(Math.random()*9)+1;
 			loc = checkLocation(loc);
 		}
-		setCell(turn, 'cross', loc);
-		turn = 'o';
+		setCell(player2, loc);
+		turn = turn === player2 ? player1 : player2;
+		updateNotif(turn+"  turn");
 
 		if(checkWins())
 			setWinner();
 	}
 }
 
-function setCell(t, tile, loc){
-	var i = loc-1;
-	var img = document.createElement('img');
-	$(img).attr('src', 'res/'+t+'-tile'+(Math.floor(Math.random()*3))+'.png');
-	$(board[i]).addClass('used');
-	$(board[i]).addClass('_'+tile+'-tile');
-	$(board[i]).attr('tile', tile);
-	$(board[i]).append(img);
-	map = replaceCharAt(map, i, t);
-	moves++;
-}
-
-function replaceCharAt(str, i, ch){
-	var arr = str.split('')
-	arr[i] = ch;
-	return arr.join('');
-}
-
-function checkWins(){
-	if(moves >=5 && moves <= ROW_SIZE*ROW_SIZE){		// one player made at least 3 moves
-		let reg_x = RegExp('^xxx|^[ox ]{3}xxx[ox ]{3}$|xxx$|x[ox ]{2}x[ox ]{2}x|x[ox ]{3}x[ox ]{3}x|^[ox ]{2}x[ox ]x[ox ]x', 'g');
-		let reg_o = RegExp('^ooo|^[ox ]{3}ooo[ox ]{3}$|ooo$|o[ox ]{2}o[ox ]{2}o|o[ox ]{3}o[ox ]{3}o|^[ox ]{2}o[ox ]o[ox ]o', 'g');
-
-		if(map.match(reg_o)){
-			alert(gameMode == 0 ? 'Player 1 won this round!': 'Congratulation! You won this round.');
-			score['player1']++;
-			updateScores();
-			clearBoard();
-		}else if(map.match(reg_x)){
-			alert(gameMode == 0 ? 'Player 2 won this round': 'A computer beat you! Try again.');
-			score['player2']++;
-			updateScores();
-			clearBoard();
-		}else if(moves >= ROW_SIZE*ROW_SIZE){
-			alert(gameMode == 0 ? "It\'s a draw!" : 'Not a loser but not a winner either');
-			score['tie']++;
-			updateScores();
-			clearBoard();
-		}
-	}
-}
-
 function compareCells(stat, i, tile){
-	if($(board[i]).attr('tile') === tile)
+	if(board[i].innerHTML === tile)
 		return -1;
 
-	if($(board[i]).attr('tile') == undefined)
+	if(board[i].innerHTML === '')
 		stat.emp++;
 
 	else
@@ -170,6 +156,7 @@ function getAILocation(tile){
 			if(loc === 0)
 				break;
 		}
+
 		if(loc > 0)
 			return loc;
 		loc = -1;
@@ -182,6 +169,7 @@ function getAILocation(tile){
 		if(loc === 0)
 			break;
 	}
+
 	if(loc > 0)
 		return loc;
 	loc = -1;
@@ -193,6 +181,7 @@ function getAILocation(tile){
 		if(loc === 0)
 			break;
 	}
+
 	return loc >= 0 ? loc : 0;
 }
 
@@ -200,32 +189,133 @@ function checkLocation(loc){
 	return $(board[loc-1]).hasClass('used') ? 0 : loc;
 }
 
-function toggleCpP2(){
-	gameMode = gameMode === 0 ? 1 : 0;
-	document.getElementById('name-p2-cp').innerHTML = gameMode === 0 ? 'Player 2':'CP';
-	score['player1']=0;
-	score['player2']=0;		// p2 or CP
-	updateScores();
-	clearBoard();
-}
-// beginning
-init();
-// switch game mode (Default P1 vs CP)
-$('#p2-cp-stats').click(toggleCpP2);
-// player inputs
-$('.cell').click(function(){
-	// if(gameMode == 1 && turn != 'o'){}
-	if(!(gameMode == 1 && turn != 'o')){
-		var loc = parseInt(($(this).attr('id')).replace('cell-',''));
-		if(checkLocation(loc) > 0){
-			let tile = turn === 'o'?'round':'cross';
-			setCell(turn, tile, loc);
-			turn = turn === 'o'?'x':'o';
+function setCell(tile, loc){
+	var i = loc-1;
 
-			if(checkWins())
-				setWinner();
-			else if(gameMode == 1)
-				setTimeout(function() {aiMoves()}, 400);
+	$(board[i]).addClass('used');
+	$(board[i]).addClass(tile+'-tile');
+	board[i].innerHTML = tile;
+	map = replaceCharAt(map, i, tile);
+	moves++;
+}
+
+function replaceCharAt(str, i, ch){
+	var arr = str.split('')
+	arr[i] = ch;
+	return arr.join('');
+}
+
+function checkWins(){
+	if(moves >=5 && moves <= ROW_SIZE*ROW_SIZE){		// one player made at least 3 moves
+		let reg_x = RegExp('^XXX|^[OX ]{3}XXX[OX ]{3}$|XXX$|X[OX ]{2}X[OX ]{2}X|X[OX ]{3}X[OX ]{3}X|^[OX ]{2}X[OX ]X[OX ]X', 'g');
+		let reg_o = RegExp('^OOO|^[OX ]{3}OOO[OX ]{3}$|OOO$|O[OX ]{2}O[OX ]{2}O|O[OX ]{3}O[OX ]{3}O|^[OX ]{2}O[OX ]O[OX ]O', 'g');
+		let btn = document.getElementById('restart-btn');
+
+		if(map.match(reg_o)){
+			updateNotif('O is winner!');
+			score['O']++;
+			btn.innerHTML = "Continue";
+			playing = false;
+		}else if(map.match(reg_x)){
+			updateNotif('X is winner!');
+			score['X']++;
+			btn.innerHTML = "Continue";
+			playing = false;
+		}else if(moves >= ROW_SIZE*ROW_SIZE){
+			updateNotif("Draw!");
+			score['tie']++;
+			btn.innerHTML = "Continue";
+			playing = false;
 		}
 	}
+}
+
+//---------- beginning ----------//
+init();
+
+// player events
+$('.cell').click(function(){
+
+	if(turn === player1 && playing){
+		playerMoves($(this), player1);
+	}
+
+	if(turn === player2 && playing){
+		if(gameMode === 0){
+			playerMoves($(this), player2);
+		}else{
+			setTimeout(function() { aiMoves()}, 400);
+		}
+	}
+});
+
+function playerMoves(obj, player) {
+	var loc = parseInt((obj.attr('id')).replace('cell-',''));
+
+	if(checkLocation(loc) > 0){
+		setCell(turn, loc);
+
+		turn = player === player1 ? player2 : player1;
+		updateNotif(turn+"  turn");
+
+		if(checkWins()){
+			setWinner();
+		}
+	}
+}
+// end of player events
+
+// chnage symbol(X or O)
+$('#X-stats').click(function(){
+	if(!$(this).hasClass('selected')){
+		$(this).addClass('selected');
+		$('#O-stats').removeClass('selected');
+		resetStats();
+		player1 = "X";
+		player2 = "O";
+		clearBoard();		
+	}
+});
+
+$('#O-stats').click(function(){
+	if(!$(this).hasClass('selected')){
+		$(this).addClass('selected');
+		$('#X-stats').removeClass('selected');
+		resetStats();
+		player1 = "O";
+		player2 = "X";
+		clearBoard();		
+	}
+});
+
+// change game type
+$('#_pvsp-btn').click(function(){
+	if($(this).css('opacity') != 1){
+		$(this).css('opacity', '1');
+		$('#_pvscp-btn').css('opacity', '0.2');
+		console.log($('#_pvscp-btn').css('opacity'));
+		gameMode = 0;
+		resetStats();
+		clearBoard();
+	}
+});
+
+$('#_pvscp-btn').click(function(){
+	if($(this).css('opacity') != 1){
+		$(this).css('opacity', '1');
+		$('#_pvsp-btn').css('opacity', '0.2');
+		gameMode = 1;
+		resetStats();
+		clearBoard();
+	}
+});
+
+$('#restart-btn').click(function(){
+	if(this.innerHTML === "Continue"){
+		updateScores();
+		this.innerHTML = "New Game";
+	}else{
+		resetStats();
+	}
+	clearBoard();
 });

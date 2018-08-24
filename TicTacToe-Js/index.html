@@ -6,29 +6,42 @@
 		<meta content="utf-8" http-equiv="encoding">
 		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css" integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous">
 		<link href="https://fonts.googleapis.com/css?family=Bungee+Inline|Titan+One" rel="stylesheet">
+		<link href="https://fonts.googleapis.com/css?family=Indie+Flower" rel="stylesheet">
 		<link rel="stylesheet" type="text/css" href="main.css">
 	</head>
 
 	<body>
 		<div id="back" class="container-fluid">
+
 			<div id='main-box'>
-				<div id=title-bar><h1>Tic Tac Toe Game</h1></div>
+
+				<div id="title-bar"><h1>Tic Tac Toe Game</h1></div>
+
+				<div style="color: #FFF; cursor: pointer;">
+					<span id="_pvsp-btn" style="opacity: 0.2; float: left;">P1 vs P2</span>
+					<span id="_pvscp-btn" style="opacity: 0.2; float: right;">P1 vs CP</span>
+				</div>
+				<!-- notification bar -->
+				<div style="width: 100%; margin: 10px auto; text-align: center; color: #FFF;"><span id="notif-bar"></span></div>
+				<!-- grid -->
 				<div id="board" class="col-8-md col-8-sm col-8-xs"></div>
+				<!-- statistics box -->
 				<div id="stats-box" class="row">
-					<div class="col-4-md col-4-sm col-4-xs">
-						<p>Player 1</p>
-						<p id="score-p1"></p>
+					<div id="X-stats" class="col-4-md col-4-sm col-4-xs">
+						<span>X :</span>
+						<span id="score-p1"></span>
 					</div>
 					<div class="col-4-md col-4-sm col-4-xs">
-						<p>Ties</p>
-						<p id="score-ties"></p>
+						<span>Draws :</span>
+						<span id="score-ties"></span>
 					</div>
-					<div id="p2-cp-stats" class="col-4-md col-4-sm col-4-xs">
-						<p id="name-p2-cp">CP</p>
-						<p id="score-p2"></p>
+					<div id="O-stats" class="col-4-md col-4-sm col-4-xs">
+						<span>O :</span>
+						<span id="score-p2"></span>
 					</div>
 				</div>
 				<!-- stats-box -->
+				<button id='restart-btn'>Restart Game</button>
 			</div>
 		</div>
 		<!--scripts -->
